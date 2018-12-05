@@ -11,10 +11,6 @@ const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}`;
 
 const list = [];
 
-// Helper function for the search functionality below
-const isSearched = searchTerm => item =>
-  item.title.toLowerCase().includes(searchTerm.toLowerCase());
-
 class App extends Component {
 
   constructor(props) {
@@ -26,72 +22,90 @@ class App extends Component {
     };
 
     this.setSearchTopStories = this.setSearchTopStories.bind(this);
-    this.onDismiss = this.onDismiss.bind(this);
+    this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
     this.onSearchChange = this.onSearchChange.bind(this);
-
+    this.onSearchSubmit = this.onSearchSubmit.bind(this);
+    this.onDismiss = this.onDismiss.bind(this);
   }
 
   setSearchTopStories(result) {
     this.setState({ result });
   }
 
-  onDismiss(id) {
-    // this is a function object
-    const isNotId = item => item.objectID !== id;
-    const updatedList = this.state.list.filter(isNotId);
-    this.setState({ list: updatedList });
+  fetchSearchTopStories(searchTerm) {
+    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+    .then(response => response.json())
+    .then(result => this.setSearchTopStories(result))
+    .catch(error => error);
   }
 
   onSearchChange(event) {
     this.setState({ searchTerm: event.target.value });
   }
 
+  onSearchSubmit(event) {
+    const { searchTerm } = this.state;
+    this.fetchSearchTopStories(searchTerm);
+    event.preventDefault(); // prevents the browser default of reloading the page
+  }
+  
+  onDismiss(id) {
+    // this is a function object
+    const isNotId = item => item.objectID !== id;
+    const updatedHits = this.state.result.hits.filter(isNotId);
+    const updatedResult = {...this.state.result, hits: updatedHits};
+    this.setState({ result: updatedResult });
+  }
+
   componentDidMount() {
     const { searchTerm } = this.state;
-    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
-      .then(response => response.json())
-      .then(result => this.setSearchTopStories(result))
-      .catch(error => error);
+    this.fetchSearchTopStories(searchTerm);
   }
 
   render() {
     const { searchTerm, result } = this.state;
-
-    if (!result) { return null; }
     return (
       <div className="page">
         <div className="interactions">
-          <div className="App">
-            <Search
-              value={searchTerm}
-              onChange={this.onSearchChange}
-            >
-              Search
-            </Search>
+          <Search
+            value={searchTerm}
+            onChange={this.onSearchChange}
+            onSubmit={this.onSearchSubmit}
+          >
+            Search
+          </Search>
+          { result && // ternary operator means if no result, no Table.
             <Table
               list={result.hits}
-              pattern={searchTerm}
               onDismiss={this.onDismiss}
             />
-          </div>
+          }
         </div>
       </div>
     );
   }
 }
 
-const Search = ({ value, onChange, children }) =>
-  <form>
-    {children} <input
+const Search = ({ 
+  value, 
+  onChange, 
+  onSubmit,
+  children 
+}) =>
+  <form onSubmit={onSubmit}>
+    <input
       type="text"
       value={value}
       onChange={onChange}
     />
+    <button type="submit">
+      {children}
+    </button>
   </form>
 
 const Table = ({ list, pattern, onDismiss }) =>
   <div className="table">
-    {list.filter(isSearched(pattern)).map(item =>
+    {list.map(item =>
       <div key={item.objectID} className="table-row">
         <span style={{ width: '40%' }}>
           <a href={item.url}>{item.title}</a>

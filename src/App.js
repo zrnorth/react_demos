@@ -14,6 +14,7 @@ const PARAM_HPP = 'hitsPerPage=';
 // const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}&${PARAM_PAGE}`;
 
 class App extends Component {
+  _isMounted = false; // Used for aborting an api call if we unmount before it returns
 
   constructor(props) {
     super(props);
@@ -56,13 +57,12 @@ class App extends Component {
         [searchKey]: { hits: updatedHits, page }
       }
     });
-    console.log(results);
   }
 
   fetchSearchTopStories(searchTerm, page = 0) {
     axios(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
-    .then(result => this.setSearchTopStories(result))
-    .catch(error => this.setState({ error }));
+    .then(result => this._isMounted && this.setSearchTopStories(result.data))
+    .catch(error => this._isMounted && this.setState({ error }));
   }
 
   onSearchChange(event) {
@@ -95,9 +95,15 @@ class App extends Component {
   }
 
   componentDidMount() {
+    this._isMounted = true;
+
     const { searchTerm } = this.state;
     this.setState({ searchKey: searchTerm });
     this.fetchSearchTopStories(searchTerm);
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   render() {

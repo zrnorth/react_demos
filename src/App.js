@@ -117,7 +117,7 @@ class App extends Component {
       results,
       searchKey,
       error,
-      isLoading
+      isLoading,
     } = this.state;
 
     const page = (
@@ -142,28 +142,32 @@ class App extends Component {
           >
             Search
           </Search>
-          { error
-            ? <div className="interactions">
-              <p>Something went wrong.</p>
-            </div>
-            : <Table
-              list={list}
+            <TableOrErrorMessage 
+              list={list} 
               onDismiss={this.onDismiss}
+              error={error}
             />
-          }
         </div>
         <div className="interactions">
-          { isLoading
-          ? <Loading />
-          : <Button onClick={() => this.fetchSearchTopStories(searchTerm, page + 1)}>
-              More
-            </Button>
-          }
+          <ButtonWithLoading 
+            isLoading={isLoading} 
+            onClick={() => this.fetchSearchTopStories(searchTerm, page + 1)}
+          >
+            More
+          </ButtonWithLoading>
         </div>
       </div>
     );
   }
 }
+
+const ErrorMessage = () =>
+  <div>Something went wrong.</div>
+
+const withError = (Component) => ({ error, ...rest}) =>
+  error
+  ? <ErrorMessage />
+  : <Component {...rest} />
 
 class Search extends Component {
   componentDidMount() {
@@ -238,6 +242,8 @@ Table.propTypes = {
   onDismiss: PropTypes.func.isRequired,
 };
 
+const TableOrErrorMessage = withError(Table);
+
 const Button = ({ 
   onClick, 
   className, 
@@ -263,6 +269,13 @@ Button.propTypes = {
 
 const Loading = () =>
   <div>Loading...</div>
+
+const withLoading = (Component) => ({ isLoading, ...rest }) =>
+  isLoading
+    ? <Loading />
+    : <Component { ...rest } />
+
+const ButtonWithLoading = withLoading(Button);
 
 export default App;
 

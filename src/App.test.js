@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import renderer from 'react-test-renderer';
 import Enzyme, { shallow } from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
-import App, { Search, Button, Table } from './App';
+import App, { Search, Button, Table, Sort } from './App';
 
 Enzyme.configure({ adapter: new Adapter() });
 
@@ -70,6 +70,7 @@ describe('Table', () => {
       { title: '2', author: '2', num_comments: 1, points: 2, objectID: 'z' },
     ],
     onDismiss: () => {},
+    sortKey: 'NONE',
   };
 
   it ('renders without crashing', () => {
@@ -91,5 +92,13 @@ describe('Table', () => {
     );
 
     expect(element.find('.table-row').length).toBe(2);
+  });
+});
+
+describe('Sort', () => {
+  it ('renders without crashing', () => {
+    const div = document.createElement('div');
+    ReactDOM.render(<Sort sortKey={'NONE'}>Sort</Sort>, div);
+    ReactDOM.unmountComponentAtNode(div);
   });
 });

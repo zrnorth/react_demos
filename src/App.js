@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
+import { sortBy } from 'lodash';
 import PropTypes from 'prop-types';
 import './App.css';
 
@@ -14,6 +15,14 @@ const PARAM_HPP = 'hitsPerPage=';
 
 // const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}&${PARAM_PAGE}`;
 
+const SORTS = {
+  NONE: list => list,
+  TITLE: list => sortBy(list, 'title'),
+  AUTHOR: list => sortBy(list, 'author'),
+  COMMENTS: list => sortBy(list, 'num_comments').reverse(),
+  POINTS: list => sortBy(list, 'points').reverse(),
+}
+
 class App extends Component {
   _isMounted = false; // Used for aborting an api call if we unmount before it returns
 
@@ -26,6 +35,7 @@ class App extends Component {
       searchTerm: DEFAULT_QUERY,
       error: null,
       isLoading: false,
+      sortKey: 'NONE',
     };
 
     this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
@@ -34,6 +44,7 @@ class App extends Component {
     this.onSearchChange = this.onSearchChange.bind(this);
     this.onSearchSubmit = this.onSearchSubmit.bind(this);
     this.onDismiss = this.onDismiss.bind(this);
+    this.onSort = this.onSort.bind(this);
   }
 
   needsToSearchTopStories(searchTerm) {
@@ -99,6 +110,10 @@ class App extends Component {
     });
   }
 
+  onSort(sortKey) {
+    this.setState({ sortKey });
+  }
+
   componentDidMount() {
     this._isMounted = true;
 
@@ -118,6 +133,7 @@ class App extends Component {
       searchKey,
       error,
       isLoading,
+      sortKey,
     } = this.state;
 
     const page = (
@@ -142,11 +158,13 @@ class App extends Component {
           >
             Search
           </Search>
-            <TableOrErrorMessage 
-              list={list} 
-              onDismiss={this.onDismiss}
-              error={error}
-            />
+          <TableOrErrorMessage 
+            list={list} 
+            sortKey={sortKey}
+            onSort={this.onSort}
+            onDismiss={this.onDismiss}
+            error={error}
+          />
         </div>
         <div className="interactions">
           <ButtonWithLoading 
@@ -207,9 +225,51 @@ Search.propTypes = {
   children: PropTypes.string,
 };
 
-const Table = ({ list, onDismiss }) =>
+const Table = ({ 
+  list, 
+  sortKey, 
+  onSort, 
+  onDismiss 
+}) =>
   <div className="table">
-    {list.map(item =>
+    <div className="table-header">
+      <span style={{width: '40%' }}>
+        <Sort
+          sortKey={'TITLE'}
+          onSort={onSort}
+        >
+          Title
+        </Sort>
+      </span>
+      <span style={{width: '30%' }}>
+        <Sort
+          sortKey={'AUTHOR'}
+          onSort={onSort}
+        >
+          Author
+        </Sort>
+      </span>
+      <span style={{width: '10%' }}>
+        <Sort
+          sortKey={'COMMENTS'}
+          onSort={onSort}
+        >
+          Comments
+        </Sort>
+      </span>
+      <span style={{width: '10%' }}>
+        <Sort
+          sortKey={'POINTS'}
+          onSort={onSort}
+        >
+          Points
+        </Sort>
+      </span>
+      <span style={{width: '10%' }}>
+        Archive
+      </span>
+    </div>
+    {SORTS[sortKey](list).map(item =>
       <div key={item.objectID} className="table-row">
         <span style={{ width: '40%' }}>
           <a href={item.url}>{item.title}</a>
@@ -239,6 +299,7 @@ Table.propTypes = {
       points: PropTypes.number,
     })
   ).isRequired,
+  sortKey: PropTypes.string.isRequired,
   onDismiss: PropTypes.func.isRequired,
 };
 
@@ -267,6 +328,21 @@ Button.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
+const Sort = ({ sortKey, onSort, children }) =>
+  <Button onClick={() => onSort(sortKey)} className="button-inline">
+    {children}
+  </Button>
+
+Sort.defaultProps = {
+  onSort: () => {},
+}
+
+Sort.propTypes = {
+  sortKey: PropTypes.string.isRequired,
+  onSort: PropTypes.func,
+  chidren: PropTypes.node,
+}
+
 const Loading = () =>
   <div>Loading...</div>
 
@@ -283,4 +359,5 @@ export {
   Button,
   Search,
   Table,
+  Sort
 };

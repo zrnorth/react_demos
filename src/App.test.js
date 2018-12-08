@@ -26,13 +26,13 @@ describe('App', () => {
 describe('Search', () => {
   it ('renders without crashing', () => {
     const div = document.createElement('div');
-    ReactDOM.render(<Search>Search</Search>, div);
+    ReactDOM.render(<Search onSubmit={() => {}}>Search</Search>, div);
     ReactDOM.unmountComponentAtNode(div);
   });
 
   test('has a valid snapshot', () => {
     const component = renderer.create(
-      <Search>Search</Search>
+      <Search onSubmit={() => {}}>Search</Search>
     );
     const tree = component.toJSON();
     expect(tree).toMatchSnapshot();
@@ -42,13 +42,13 @@ describe('Search', () => {
 describe('Button', () => {
   it ('renders without crashing', () => {
     const div = document.createElement('div');
-    ReactDOM.render(<Button>Give Me More</Button>, div);
+    ReactDOM.render(<Button onClick={() => {}}>More</Button>, div);
     ReactDOM.unmountComponentAtNode(div);
   });
 
   test('has a valid snapshot', () => {
     const component = renderer.create(
-      <Button>More</Button>
+      <Button onClick={() => {}}>More</Button>
     );
     const tree = component.toJSON();
     expect(tree).toMatchSnapshot();
@@ -56,7 +56,7 @@ describe('Button', () => {
 
   it('handles className and children correctly', () => {
     const element = shallow(
-      <Button className='testClass'>ButtonChild</Button>
+      <Button onClick={() => {}} className='testClass'>ButtonChild</Button>
     );
 
     expect(element.find('.testClass').text()).toBe('ButtonChild');
@@ -69,6 +69,7 @@ describe('Table', () => {
       { title: '1', author: '1', num_comments: 1, points: 2, objectID: 'y' },
       { title: '2', author: '2', num_comments: 1, points: 2, objectID: 'z' },
     ],
+    onDismiss: () => {},
   };
 
   it ('renders without crashing', () => {
